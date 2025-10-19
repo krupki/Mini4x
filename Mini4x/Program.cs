@@ -1,39 +1,35 @@
-﻿// Program.cs
-class Program
+﻿class Program
 {
     static Map gameMap;
+    static Player player;
+    static AIPlayer aiPlayer;
     static bool gameRunning = true;
 
     static void Main(string[] args)
     {
         Console.Title = "Mini-4X C# Simulation";
         
-        // 1. Spiel initialisieren
         Initialize();
 
-        // 2. Die Spielschleife (Game Loop)
         while (gameRunning)
         {
-            // 2a. Karte zeichnen
             Render();
-
-            // 2b. Auf Spieler-Input warten
             GetInput();
-
-            // 2c. Spiel-Logik aktualisieren (noch leer)
             Update();
         }
     }
 
     static void Initialize()
     {
-        // Erstelle eine kleine Karte (z.B. 20x10)
         gameMap = new Map(20, 10);
+        
+        player = new Player("Hero", '@', ConsoleColor.Yellow, 0, 0);
+        aiPlayer = new AIPlayer("Goblin", 'G', ConsoleColor.Red, gameMap.Width - 1, gameMap.Height - 1);
     }
 
     static void Render()
     {
-        Console.Clear(); // Bildschirm löschen für Neuzeichnung
+        Console.Clear();
         
         for (int y = 0; y < gameMap.Height; y++)
         {
@@ -41,27 +37,69 @@ class Program
             {
                 Tile tile = gameMap.Tiles[x, y];
                 Console.ForegroundColor = tile.Color;
-                Console.Write(tile.Symbol + " "); // Schreibe das Symbol der Kachel
+                Console.Write(tile.Symbol + " ");
+
+                bool unitOnTile = false;
+
+                if (player.X == x && player.Y == y)
+                {
+                    Console.SetCursorPosition(x * 2, y); 
+                    Console.ForegroundColor = player.Color;
+                    Console.Write(player.Symbol);
+                    unitOnTile = true;
+                }
+                
+                if (aiPlayer.X == x && aiPlayer.Y == y)
+                {
+                    if (!unitOnTile) 
+                    {
+                        Console.SetCursorPosition(x * 2, y);
+                        Console.ForegroundColor = aiPlayer.Color;
+                        Console.Write(aiPlayer.Symbol);
+                    }
+                }
             }
-            Console.WriteLine(); // Nächste Zeile
+            Console.WriteLine(); 
         }
         Console.ResetColor();
-        Console.WriteLine("\nDrücke 'Q' zum Beenden.");
+        Console.WriteLine($"\n{player.Name} @ ({player.X},{player.Y}) | {aiPlayer.Name} @ ({aiPlayer.X},{aiPlayer.Y})");
+        Console.WriteLine("Bewege dich mit Pfeiltasten, 'Q' zum Beenden.");
     }
 
     static void GetInput()
     {
-        // Warte auf einen Tastendruck
-        ConsoleKeyInfo keyInfo = Console.ReadKey(true); // true = Taste nicht anzeigen
-        if (keyInfo.Key == ConsoleKey.Q)
+        ConsoleKeyInfo keyInfo = Console.ReadKey(true); 
+        
+        int dx = 0, dy = 0;
+
+        switch (keyInfo.Key)
         {
-            gameRunning = false;
+            case ConsoleKey.UpArrow:
+                dy = -1;
+                break;
+            case ConsoleKey.DownArrow:
+                dy = 1;
+                break;
+            case ConsoleKey.LeftArrow:
+                dx = -1;
+                break;
+            case ConsoleKey.RightArrow:
+                dx = 1;
+                break;
+            case ConsoleKey.Q:
+                gameRunning = false;
+                break;
+            default:
+                Console.WriteLine("\nUngültige Eingabe. Bitte Pfeiltasten benutzen oder 'Q' drücken.");
+
+                return;
         }
+        
+        player.Move(dx, dy, gameMap);
     }
 
     static void Update()
     {
-        // Hier kommt später die KI-Logik, Ressourcen-Berechnung etc.
-        // Fürs Erste bleibt das leer.
+        aiPlayer.Move(0, 0, gameMap);
     }
 }
